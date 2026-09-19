@@ -1,0 +1,13 @@
+{
+  "name": "pranaforge-concierge-ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PranaForge Concierge — discreet role screens for Today, Kitchen, Floor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

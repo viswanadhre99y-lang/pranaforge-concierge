@@ -1,0 +1,11 @@
+config.json
+logs/
+node_modules/
+.env
+*.log
+apps/concierge-ui/config.json
+apps/concierge-ui/logs/
+**/node_modules/
+.env
+.env.*
+*.pem
