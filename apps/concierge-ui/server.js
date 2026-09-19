@@ -24,6 +24,7 @@ const KNOWN_PROTOCOL_IDS = [
   'high_stress_interrupt',
   'sleep_wind_down',
   'pre_meeting',
+  'body_ready',
 ];
 
 function loadConfig() {
