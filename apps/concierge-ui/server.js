@@ -8,6 +8,7 @@ const { URL } = require('url');
 
 const claimsGate = require('./lib/claimsGate');
 const principalStore = require('./lib/principalStore');
+const pieProxy = require('./lib/pieProxy');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
@@ -419,6 +420,17 @@ async function handlePing(req, res, config) {
   }
 }
 
+
+async function handlePieRecommend(req, res, config) {
+  if (!requireStaff(req, res)) return;
+  let body;
+  try { body = await readBody(req); }
+  catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+  const result = await pieProxy.proxyRecommend(body, config);
+  // Always 200 for assist miss (pie_unavailable / unauthorized) so Floor never crashes
+  return sendJson(res, 200, result);
+}
+
 function createServer(config) {
   return http.createServer(async (req, res) => {
     const host = req.headers.host || 'localhost';
@@ -444,6 +456,8 @@ function createServer(config) {
           ok: true,
           auth_required: staffPinRequired(),
           known_protocol_ids: KNOWN_PROTOCOL_IDS,
+          pie_url: pieProxy.resolvePieBaseUrl(config),
+          pie_assist: true,
         });
       }
       if (pathname.indexOf('/api/principal') === 0) {
@@ -453,6 +467,7 @@ function createServer(config) {
       if (req.method === 'POST' && pathname === '/api/kitchen') return await handleKitchen(req, res, config);
       if (req.method === 'POST' && pathname === '/api/floor') return await handleFloor(req, res, config);
       if (req.method === 'POST' && pathname === '/api/claims') return await handleClaims(req, res, config);
+      if (req.method === 'POST' && pathname === '/api/pie/recommend') return await handlePieRecommend(req, res, config);
       if (req.method === 'POST' && pathname === '/api/ping') return await handlePing(req, res, config);
       if (req.method === 'GET') return serveStatic(req, res, pathname);
       sendJson(res, 405, { ok: false, error: 'Method not allowed' });

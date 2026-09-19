@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — PIE Floor staff-assist (2026-09-19)
+
+### Added
+- `POST /api/pie/recommend` proxies to PIE runtime (`PIE_URL` / `pie_url`, default `http://127.0.0.1:8790`) with optional `PIE_STAFF_PIN` → `X-PIE-Staff-Pin`.
+- Floor panel **Protocol assist (PIE)**: Top-3 with why/confidence, SILENCE/escalate badges, **Use ID** → `#floor-protocol`.
+- Unreachable PIE → `{ok:false,error:'pie_unavailable'}` without breaking Floor.
+- Light Today hint linking to Floor assist.
+- `scripts/test-pie-proxy.js` body-map asserts.
+
 ## 0.2.0 — Phase-1 gap fill (2026-09-19)
 
 ### Fixed
