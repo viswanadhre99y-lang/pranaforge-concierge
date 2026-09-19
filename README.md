@@ -6,21 +6,22 @@ Bots (Today Desk / Kitchen Card / Floor Runner / Claims Warden) are the brains. 
 
 ## Layout
 
-- `apps/concierge-ui` — Today | Kitchen | Floor screens + webhook proxy server
+- `apps/concierge-ui` — Today | Kitchen | Floor | Claims + webhook proxy + Principal File
 - `knowledge/` — diet principles, India pantry, meal templates, travel-72h, maintenance SOP, claims-safe language
 
 ## Run (local)
 
 ```bash
 cd apps/concierge-ui
-cp config.example.json config.json   # fill webhook URLs
-export PF_TODAY_WEBHOOK_KEY=...
-export PF_KITCHEN_WEBHOOK_KEY=...
-export PF_FLOOR_WEBHOOK_KEY=...
+cp config.example.json config.json
+export PF_STAFF_PIN=optional-pin
+# fill webhook URLs in config.json + PF_*_WEBHOOK_KEY env vars when ready
 node server.js
 ```
 
 Binds `0.0.0.0:8787`. Health: `GET /health`.
+
+See `CHANGELOG.md` for Phase-1 gap-fill notes. **Set this GitHub repo to private.**
 
 ## Rails
 

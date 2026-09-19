@@ -3,6 +3,7 @@
   "webhooks": {
     "today": { "url": "", "keyEnv": "PF_TODAY_WEBHOOK_KEY" },
     "kitchen": { "url": "", "keyEnv": "PF_KITCHEN_WEBHOOK_KEY" },
-    "floor": { "url": "", "keyEnv": "PF_FLOOR_WEBHOOK_KEY" }
+    "floor": { "url": "", "keyEnv": "PF_FLOOR_WEBHOOK_KEY" },
+    "claims": { "url": "", "keyEnv": "PF_CLAIMS_WEBHOOK_KEY" }
   }
 }
