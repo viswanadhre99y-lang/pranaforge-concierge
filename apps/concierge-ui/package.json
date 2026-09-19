@@ -2,12 +2,13 @@
   "name": "pranaforge-concierge-ui",
   "version": "1.0.0",
   "private": true,
-  "description": "PranaForge Concierge \u2014 discreet role screens for Today, Kitchen, Floor",
+  "description": "PranaForge Concierge — Four Rooms staff console (Library|Situation|Review|Delivery)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node scripts/test-pie-proxy.js",
-    "test:pie-proxy": "node scripts/test-pie-proxy.js"
+    "test": "node scripts/test-pie-proxy.js && node scripts/test-four-rooms.js",
+    "test:pie-proxy": "node scripts/test-pie-proxy.js",
+    "test:four-rooms": "node scripts/test-four-rooms.js"
   },
   "engines": {
     "node": ">=18"

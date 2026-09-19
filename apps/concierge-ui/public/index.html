@@ -13,28 +13,44 @@
       <div class="brand">
         <span class="mark"></span>
         <span class="name">PranaForge</span>
-        <span class="sub">Concierge</span>
+        <span class="sub">Four Rooms</span>
       </div>
-      <nav class="roles" aria-label="Role">
-        <a href="#today" data-role="today">Today</a>
-        <a href="#kitchen" data-role="kitchen">Kitchen</a>
+      <nav class="roles" aria-label="Rooms">
+        <a href="#library" data-role="library">Library</a>
+        <a href="#today" data-role="today">Situation</a>
+        <a href="#review" data-role="review">Review</a>
         <a href="#floor" data-role="floor">Floor</a>
+        <a href="#kitchen" data-role="kitchen">Kitchen</a>
         <a href="#claims" data-role="claims">Claims</a>
       </nav>
       <div class="alias-bar">
         <label for="alias">Alias</label>
-        <input id="alias" type="text" autocomplete="off" spellcheck="false" placeholder="principal" />
+        <input id="alias" type="text" autocomplete="off" spellcheck="false" placeholder="r" value="r" />
         <label for="staff-pin">PIN</label>
         <input id="staff-pin" type="password" autocomplete="off" placeholder="if set" />
       </div>
     </header>
 
     <main>
-      <!-- TODAY -->
+      <!-- ROOM 1 LIBRARY -->
+      <section id="panel-library" class="panel" hidden>
+        <h1>Library</h1>
+        <p class="lede">Staff only — vault IDs (labels), public rails, diet rails. Guest never browses here.</p>
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-library-load">Load index</button>
+        </div>
+        <div class="result">
+          <div class="result-head">Catalog</div>
+          <pre id="result-library" class="result-body"></pre>
+        </div>
+      </section>
+
+      <!-- ROOM 2 SITUATION (Today) -->
       <section id="panel-today" class="panel" hidden>
-        <h1>Today</h1>
-        <p class="lede">Principal day brief and preference signals.</p>
-        <p class="hint">Need a protocol pick? Use <a href="#floor">Floor → Protocol assist (PIE)</a> for staff Top-3 (IDs only — no vault recipes).</p>
+        <h1>Situation</h1>
+        <p class="lede">Principal file + what is happening now. Physician constraints are locked.</p>
+
+        <div id="physician-banner" class="banner lock" hidden></div>
 
         <div class="grid">
           <div class="field">
@@ -47,8 +63,46 @@
           </div>
         </div>
 
+        <div class="grid three">
+          <div class="field">
+            <label for="sit-day-type">Day type</label>
+            <select id="sit-day-type">
+              <option value="Forge">Forge</option>
+              <option value="Travel" selected>Travel</option>
+              <option value="Stress">Stress</option>
+              <option value="Peak">Peak</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sit-minutes">Minutes available</label>
+            <input id="sit-minutes" type="number" min="1" max="180" value="12" />
+          </div>
+          <div class="field">
+            <label for="sit-privacy">Privacy closed room</label>
+            <select id="sit-privacy">
+              <option value="yes" selected>yes</option>
+              <option value="no">no</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="sit-travel">Travel 72h</label>
+            <select id="sit-travel">
+              <option value="yes" selected>yes</option>
+              <option value="no">no</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sit-dislikes">Dislikes hard (comma)</label>
+            <input id="sit-dislikes" type="text" value="cold smoothie" />
+          </div>
+        </div>
+
         <div class="actions">
-          <button type="button" class="btn primary" id="btn-get-today">Get Today</button>
+          <button type="button" class="btn primary" id="btn-get-today">Load situation</button>
+          <button type="button" class="btn" id="btn-save-situation">Save situation</button>
         </div>
 
         <hr class="rule" />
@@ -113,17 +167,68 @@
         </div>
       </section>
 
-      <!-- KITCHEN -->
+      <!-- ROOM 3 REVIEW -->
+      <section id="panel-review" class="panel" hidden>
+        <h1>Review</h1>
+        <p class="lede">OPTIONS / RECOMMEND / REFUSE / DRAFT — nothing client-facing leaves unsigned.</p>
+
+        <div class="grid">
+          <div class="field">
+            <label for="review-session-time">Session time</label>
+            <input id="review-session-time" type="text" value="18:00 IST" />
+          </div>
+          <div class="field">
+            <label for="review-edit-id">Edit recommend ID</label>
+            <input id="review-edit-id" type="text" list="vault-ids" placeholder="TR-01" />
+            <datalist id="vault-ids">
+              <option value="DF-01"></option>
+              <option value="DF-02"></option>
+              <option value="EL-01"></option>
+              <option value="CL-01"></option>
+              <option value="SF-01"></option>
+              <option value="TR-01"></option>
+              <option value="TR-02"></option>
+              <option value="HS-01"></option>
+              <option value="SS-01"></option>
+              <option value="PM-01"></option>
+              <option value="BR-01"></option>
+            </datalist>
+          </div>
+        </div>
+
+        <div class="field checkbox-row">
+          <label>
+            <input type="checkbox" id="review-include-rail" />
+            Include public rail (off by default)
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-review-options">Load OPTIONS</button>
+          <button type="button" class="btn" id="btn-review-draft">Refresh DRAFT</button>
+          <button type="button" class="btn accent" id="btn-review-approve">Approve</button>
+          <button type="button" class="btn" id="btn-review-silence">SILENCE</button>
+        </div>
+
+        <div id="review-why" class="pie-badge ok" hidden></div>
+
+        <div class="result">
+          <div class="result-head">OPTIONS · RECOMMEND · REFUSE · DRAFT</div>
+          <pre id="result-review" class="result-body"></pre>
+        </div>
+      </section>
+
+      <!-- ROOM 4 KITCHEN -->
       <section id="panel-kitchen" class="panel" hidden>
         <h1>Kitchen</h1>
-        <p class="lede">Issue a discreet diet card for service.</p>
+        <p class="lede">Chef card. Save writes <code>data/outbox/{alias}-{date}.md</code>. No webhook required.</p>
 
         <div class="grid">
           <div class="field">
             <label for="kitchen-day-type">Day type</label>
             <select id="kitchen-day-type">
               <option value="Forge">Forge</option>
-              <option value="Travel">Travel</option>
+              <option value="Travel" selected>Travel</option>
               <option value="Stress">Stress</option>
               <option value="Peak">Peak</option>
             </select>
@@ -139,8 +244,8 @@
         </div>
 
         <div class="field">
-          <label for="kitchen-physician">Physician constraints</label>
-          <textarea id="kitchen-physician" rows="2" placeholder="Optional clinical constraints for kitchen"></textarea>
+          <label for="kitchen-physician">Physician constraints (display only — file wins)</label>
+          <textarea id="kitchen-physician" rows="2" placeholder="Loaded from principal; never overwritten here"></textarea>
         </div>
         <div class="field">
           <label for="kitchen-pattern">Pattern</label>
@@ -153,6 +258,7 @@
 
         <div class="actions">
           <button type="button" class="btn primary" id="btn-diet-card">Issue diet card</button>
+          <button type="button" class="btn accent" id="btn-kitchen-save">Save to outbox</button>
         </div>
 
         <div class="result">
@@ -161,41 +267,36 @@
         </div>
       </section>
 
-      <!-- FLOOR -->
+      <!-- ROOM 4 FLOOR -->
       <section id="panel-floor" class="panel" hidden>
         <h1>Floor</h1>
-        <p class="lede">Run-of-show and session QA.</p>
+        <p class="lede">Live session checklist only. Guest text = logistics — never a recipe.</p>
 
         <div class="grid">
           <div class="field">
             <label for="floor-protocol">Protocol ID</label>
-            <input id="floor-protocol" type="text" list="protocol-list" autocomplete="off" placeholder="daily_forge" />
-            <datalist id="protocol-list">
-              <option value="daily_forge"></option>
-              <option value="emotional_load_reset"></option>
-              <option value="clarity_protocol"></option>
-              <option value="stress_field_clearing"></option>
-              <option value="travel_reset"></option>
-              <option value="high_stress_interrupt"></option>
-              <option value="sleep_wind_down"></option>
-              <option value="pre_meeting"></option>
-              <option value="body_ready"></option>
-            </datalist>
+            <input id="floor-protocol" type="text" list="vault-ids" autocomplete="off" placeholder="TR-01" />
           </div>
           <div class="field">
-            <label for="floor-session">Session ID</label>
-            <input id="floor-session" type="text" autocomplete="off" />
+            <label for="floor-session">Session ID / time</label>
+            <input id="floor-session" type="text" autocomplete="off" value="18:00 IST" />
           </div>
         </div>
 
         <div class="actions">
-          <button type="button" class="btn primary" id="btn-ros">Run-of-show</button>
+          <button type="button" class="btn primary" id="btn-ros">Live run sheet</button>
+          <button type="button" class="btn" id="btn-guest-text">Guest text</button>
+        </div>
+
+        <div id="guest-text-box" class="guest-box" hidden>
+          <div class="result-head">Guest channel (copy only)</div>
+          <pre id="guest-text-out" class="result-body"></pre>
         </div>
 
         <hr class="rule" />
 
         <h2>Protocol assist (PIE)</h2>
-        <p class="lede pie-lede">Staff Top-3 from Protocol Intelligence Engine. Concierge stays operator shell — IDs + why/confidence only, never vault recipes.</p>
+        <p class="lede pie-lede">Staff Top-3 — IDs + why only. Falls back to day-type vault pick if PIE is down.</p>
 
         <div class="grid three">
           <div class="field">
@@ -209,10 +310,10 @@
           <div class="field">
             <label for="pie-place">place_class</label>
             <select id="pie-place">
-              <option value="office" selected>office</option>
+              <option value="office">office</option>
               <option value="desk">desk</option>
               <option value="home">home</option>
-              <option value="hotel">hotel</option>
+              <option value="hotel" selected>hotel</option>
               <option value="public">public</option>
               <option value="airport">airport</option>
               <option value="plane">plane</option>
@@ -227,13 +328,13 @@
             <label for="pie-event">event_tag</label>
             <select id="pie-event">
               <option value="none">none</option>
-              <option value="investor_meeting" selected>investor_meeting</option>
+              <option value="investor_meeting">investor_meeting</option>
               <option value="pitch">pitch</option>
               <option value="board_meeting">board_meeting</option>
               <option value="meeting_streak">meeting_streak</option>
               <option value="T_sleep">T_sleep</option>
               <option value="pre_flight">pre_flight</option>
-              <option value="post_landing">post_landing</option>
+              <option value="post_landing" selected>post_landing</option>
               <option value="midday_crash">midday_crash</option>
               <option value="deep_work">deep_work</option>
             </select>
@@ -316,7 +417,7 @@
     </main>
 
     <footer class="foot">
-      <span>Private · local only</span>
+      <span>Private · local only · four rooms</span>
       <button type="button" class="linkish" id="btn-ping">Ping</button>
     </footer>
   </div>

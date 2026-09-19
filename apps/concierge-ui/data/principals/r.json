@@ -1,0 +1,74 @@
+{
+  "alias": "r",
+  "partner_id": "",
+  "track": "pilot",
+  "language": "en",
+  "privacy_flags": [],
+  "timezone": "Asia/Kolkata",
+  "timezone_home": "Asia/Kolkata",
+  "timezone_now": "Asia/Kolkata",
+  "contacts": {
+    "pa": "",
+    "chef": "house-chef",
+    "house": "",
+    "facilitator": ""
+  },
+  "likes": [
+    "warm broth",
+    "familiar spices"
+  ],
+  "dislikes_hard": [
+    "cold smoothie"
+  ],
+  "diet": {
+    "physician_constraints": "none",
+    "pattern": "India-kitchen, protein-anchored",
+    "allergens": [],
+    "religion_rules": "",
+    "paneer_vs_fish": "",
+    "india_kitchen_ok": true,
+    "hotel_kitchen_ok": true,
+    "refuse_substitute": "",
+    "arrival_night_rule": "warm, simple, no tasting-menu experiment"
+  },
+  "state": {
+    "day_type": "Travel",
+    "scores_latest": {
+      "date": "2026-09-19",
+      "energy": 4,
+      "sleep_rest": 3,
+      "clarity": 4,
+      "logged_at": "2026-09-19T19:59:48.914Z"
+    },
+    "last_protocol": "TR-01",
+    "travel_72h": true,
+    "open_incidents": [],
+    "minutes_available": 12,
+    "privacy_closed_room": true
+  },
+  "service": {
+    "partner": "",
+    "property": "",
+    "facilitator": "",
+    "consent_on_file": true
+  },
+  "allergens": [],
+  "diet_pattern": "India-kitchen, protein-anchored",
+  "physician_constraints": "none",
+  "day_type_preference": "Travel",
+  "preferences": {},
+  "scores": [
+    {
+      "date": "2026-09-19",
+      "energy": 4,
+      "sleep_rest": 3,
+      "clarity": 4,
+      "logged_at": "2026-09-19T19:59:48.914Z"
+    }
+  ],
+  "notes_lifestyle": "Fixture R — Travel + dislike cold smoothie + physician none",
+  "travel_72h": true,
+  "minutes_available": 12,
+  "privacy_closed_room": true,
+  "updated_at": "2026-09-19T19:59:48.914Z"
+}

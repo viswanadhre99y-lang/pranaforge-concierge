@@ -381,3 +381,54 @@ input[type="number"] {
   outline: none;
 }
 input[type="number"]:focus { border-color: var(--accent-dim); }
+
+/* Four Rooms extras */
+.shell { max-width: 820px; }
+.roles { flex-wrap: wrap; }
+.btn.accent {
+  background: transparent;
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.btn.accent:hover {
+  background: var(--ok);
+  color: var(--bg);
+}
+.banner {
+  margin: 0 0 1.25rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.banner.lock {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  background: rgba(196, 181, 154, 0.06);
+}
+.checkbox-row label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--accent);
+}
+.guest-box {
+  margin: 0 0 1.5rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--ok);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.guest-box .result-body {
+  color: var(--text);
+  max-height: 6rem;
+}
