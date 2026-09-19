@@ -19,8 +19,10 @@ const KNOWN_PROTOCOL_IDS = [
   'emotional_load_reset',
   'clarity_protocol',
   'stress_field_clearing',
-  'accelerator_travel',
-  'accelerator_high_stress',
+  'travel_reset',
+  'high_stress_interrupt',
+  'sleep_wind_down',
+  'pre_meeting',
 ];
 
 function loadConfig() {
