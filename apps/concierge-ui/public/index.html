@@ -19,10 +19,13 @@
         <a href="#today" data-role="today">Today</a>
         <a href="#kitchen" data-role="kitchen">Kitchen</a>
         <a href="#floor" data-role="floor">Floor</a>
+        <a href="#claims" data-role="claims">Claims</a>
       </nav>
       <div class="alias-bar">
         <label for="alias">Alias</label>
         <input id="alias" type="text" autocomplete="off" spellcheck="false" placeholder="principal" />
+        <label for="staff-pin">PIN</label>
+        <input id="staff-pin" type="password" autocomplete="off" placeholder="if set" />
       </div>
     </header>
 
@@ -165,7 +168,15 @@
         <div class="grid">
           <div class="field">
             <label for="floor-protocol">Protocol ID</label>
-            <input id="floor-protocol" type="text" autocomplete="off" />
+            <input id="floor-protocol" type="text" list="protocol-list" autocomplete="off" placeholder="daily_forge" />
+            <datalist id="protocol-list">
+              <option value="daily_forge"></option>
+              <option value="emotional_load_reset"></option>
+              <option value="clarity_protocol"></option>
+              <option value="stress_field_clearing"></option>
+              <option value="accelerator_travel"></option>
+              <option value="accelerator_high_stress"></option>
+            </datalist>
           </div>
           <div class="field">
             <label for="floor-session">Session ID</label>
@@ -201,6 +212,24 @@
           <pre id="result-floor" class="result-body"></pre>
         </div>
       </section>
+
+      <!-- CLAIMS -->
+      <section id="panel-claims" class="panel" hidden>
+        <h1>Claims</h1>
+        <p class="lede">Scrub forbidden medical language before anything guest-facing.</p>
+        <div class="field">
+          <label for="claims-text">Text to audit</label>
+          <textarea id="claims-text" rows="6" placeholder="Paste diet card, WhatsApp, or brochure copy"></textarea>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-claims-audit">Audit</button>
+        </div>
+        <div class="result">
+          <div class="result-head">Flags + scrubbed</div>
+          <pre id="result-claims" class="result-body"></pre>
+        </div>
+      </section>
+
     </main>
 
     <footer class="foot">

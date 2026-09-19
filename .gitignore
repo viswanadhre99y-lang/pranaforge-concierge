@@ -5,3 +5,9 @@ apps/concierge-ui/config.json
 apps/concierge-ui/logs/
 *.log
 .DS_Store
+
+# Principal files (alias JSON — never commit UHNW data)
+apps/concierge-ui/data/principals/*.json
+!apps/concierge-ui/data/principals/.gitkeep
+apps/concierge-ui/config.json
+apps/concierge-ui/logs/

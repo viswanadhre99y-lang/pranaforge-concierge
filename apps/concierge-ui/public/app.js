@@ -1,65 +1,71 @@
 (function () {
   'use strict';
 
-  const ALIAS_KEY = 'pf_concierge_alias';
-  const ROLES = ['today', 'kitchen', 'floor'];
-
-  const $ = (id) => document.getElementById(id);
+  var ALIAS_KEY = 'pf_concierge_alias';
+  var PIN_KEY = 'pf_concierge_pin';
+  var ROLES = ['today', 'kitchen', 'floor', 'claims'];
+  var $ = function (id) { return document.getElementById(id); };
 
   function todayISO() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  function getAlias() {
-    return ($('alias').value || '').trim();
-  }
-
-  function setAlias(v) {
-    $('alias').value = v || '';
-  }
+  function getAlias() { return ($('alias').value || '').trim(); }
+  function getPin() { return ($('staff-pin').value || '').trim(); }
 
   function loadAlias() {
     try {
-      const v = localStorage.getItem(ALIAS_KEY);
-      if (v) setAlias(v);
-    } catch (_) { /* ignore */ }
+      var v = localStorage.getItem(ALIAS_KEY);
+      if (v) $('alias').value = v;
+      var p = sessionStorage.getItem(PIN_KEY);
+      if (p && $('staff-pin')) $('staff-pin').value = p;
+    } catch (e) {}
   }
 
   function saveAlias() {
-    try {
-      localStorage.setItem(ALIAS_KEY, getAlias());
-    } catch (_) { /* ignore */ }
+    try { localStorage.setItem(ALIAS_KEY, getAlias()); } catch (e) {}
+  }
+  function savePin() {
+    try { sessionStorage.setItem(PIN_KEY, getPin()); } catch (e) {}
   }
 
   function currentRole() {
-    const h = (location.hash || '#today').replace(/^#/, '').toLowerCase();
-    return ROLES.includes(h) ? h : 'today';
+    var h = (location.hash || '#today').replace(/^#/, '').toLowerCase();
+    return ROLES.indexOf(h) >= 0 ? h : 'today';
   }
 
   function showRole(role) {
-    ROLES.forEach((r) => {
-      const panel = $(`panel-${r}`);
+    ROLES.forEach(function (r) {
+      var panel = $('panel-' + r);
       if (panel) panel.hidden = r !== role;
     });
-    document.querySelectorAll('.roles a').forEach((a) => {
+    document.querySelectorAll('.roles a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-role') === role);
     });
   }
 
   function route() {
-    const role = currentRole();
+    var role = currentRole();
     if (location.hash.replace(/^#/, '').toLowerCase() !== role) {
-      history.replaceState(null, '', `#${role}`);
+      history.replaceState(null, '', '#' + role);
     }
     showRole(role);
   }
 
+  function displayPayload(data) {
+    if (data == null) return '';
+    if (typeof data === 'string') return data;
+    if (data.text) return data.text + '\n\n---\n' + JSON.stringify(data, null, 2);
+    if (data.card) return data.card + '\n\n---\n' + JSON.stringify(data, null, 2);
+    if (data.scrubbed && data.flags) {
+      return 'Flags: ' + (data.flags.join(', ') || '(none)') + '\nClean: ' + !!data.clean + '\n\nScrubbed:\n' + data.scrubbed;
+    }
+    return JSON.stringify(data, null, 2);
+  }
+
   function showResult(role, data, isError) {
-    const el = $(`result-${role}`);
+    var el = $('result-' + role);
     if (!el) return;
     el.classList.remove('empty', 'err', 'ok');
     if (data == null || data === '') {
@@ -67,24 +73,27 @@
       el.classList.add('empty');
       return;
     }
-    const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    el.textContent = text;
+    el.textContent = displayPayload(data);
     el.classList.add(isError ? 'err' : 'ok');
   }
 
+  function headers() {
+    var h = { 'Content-Type': 'application/json' };
+    var pin = getPin();
+    if (pin) h['X-PF-Staff-Pin'] = pin;
+    return h;
+  }
+
   async function postApi(path, payload) {
-    const res = await fetch(path, {
+    var res = await fetch(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers(),
       body: JSON.stringify(payload),
     });
-    let json = null;
-    const text = await res.text();
-    try {
-      json = text ? JSON.parse(text) : null;
-    } catch {
-      json = { raw: text };
-    }
+    var text = await res.text();
+    var json = null;
+    try { json = text ? JSON.parse(text) : null; }
+    catch (e) { json = { raw: text }; }
     return { status: res.status, ok: res.ok, body: json };
   }
 
@@ -96,7 +105,7 @@
   async function runAction(role, btn, payload) {
     setBusy(btn, true);
     try {
-      const result = await postApi(`/api/${role}`, payload);
+      var result = await postApi('/api/' + role, payload);
       showResult(role, result.body, !result.ok);
     } catch (e) {
       showResult(role, { ok: false, error: e.message || String(e) }, true);
@@ -105,81 +114,84 @@
     }
   }
 
-  // —— Today ——
-  $('btn-get-today').addEventListener('click', () => {
+  $('btn-get-today').addEventListener('click', function () {
     runAction('today', $('btn-get-today'), {
       action: 'get_today',
       alias: getAlias(),
       date: $('today-date').value,
-      tz: $('today-tz').value.trim() || 'Asia/Kolkata',
+      tz: ($('today-tz').value || '').trim() || 'Asia/Kolkata',
     });
   });
 
-  $('btn-log-score').addEventListener('click', () => {
+  $('btn-log-score').addEventListener('click', function () {
     runAction('today', $('btn-log-score'), {
       action: 'log_score',
       alias: getAlias(),
       date: $('today-date').value,
-      tz: $('today-tz').value.trim() || 'Asia/Kolkata',
+      tz: ($('today-tz').value || '').trim() || 'Asia/Kolkata',
       energy: Number($('score-energy').value),
       sleep_rest: Number($('score-sleep').value),
       clarity: Number($('score-clarity').value),
     });
   });
 
-  $('btn-patch-pref').addEventListener('click', () => {
+  $('btn-patch-pref').addEventListener('click', function () {
     runAction('today', $('btn-patch-pref'), {
       action: 'patch_preference',
       alias: getAlias(),
-      path: $('pref-path').value.trim(),
+      path: ($('pref-path').value || '').trim(),
       value: $('pref-value').value,
     });
   });
 
-  // —— Kitchen ——
-  $('btn-diet-card').addEventListener('click', () => {
+  $('btn-diet-card').addEventListener('click', function () {
     runAction('kitchen', $('btn-diet-card'), {
       action: 'issue_diet_card',
       alias: getAlias(),
       day_type: $('kitchen-day-type').value,
       date: $('kitchen-date').value,
-      tz: $('kitchen-tz').value.trim() || 'Asia/Kolkata',
-      physician_constraints: $('kitchen-physician').value.trim(),
-      pattern: $('kitchen-pattern').value.trim(),
-      allergens: $('kitchen-allergens').value.trim(),
+      tz: ($('kitchen-tz').value || '').trim() || 'Asia/Kolkata',
+      physician_constraints: ($('kitchen-physician').value || '').trim(),
+      pattern: ($('kitchen-pattern').value || '').trim(),
+      allergens: ($('kitchen-allergens').value || '').trim(),
     });
   });
 
-  // —— Floor ——
-  $('btn-ros').addEventListener('click', () => {
+  $('btn-ros').addEventListener('click', function () {
     runAction('floor', $('btn-ros'), {
       action: 'get_run_of_show',
       alias: getAlias(),
-      protocol_id: $('floor-protocol').value.trim(),
-      session_id: $('floor-session').value.trim(),
+      protocol_id: ($('floor-protocol').value || '').trim(),
+      session_id: ($('floor-session').value || '').trim(),
     });
   });
 
-  $('btn-log-qa').addEventListener('click', () => {
+  $('btn-log-qa').addEventListener('click', function () {
     runAction('floor', $('btn-log-qa'), {
       action: 'log_qa',
       alias: getAlias(),
-      protocol_id: $('floor-protocol').value.trim(),
-      session_id: $('floor-session').value.trim(),
-      consent: $('qa-consent').value.trim(),
-      checklist: $('qa-checklist').value.trim(),
-      incident: $('qa-incident').value.trim(),
+      protocol_id: ($('floor-protocol').value || '').trim(),
+      session_id: ($('floor-session').value || '').trim(),
+      consent: ($('qa-consent').value || '').trim(),
+      checklist: ($('qa-checklist').value || '').trim(),
+      incident: ($('qa-incident').value || '').trim(),
     });
   });
 
-  // —— Ping ——
-  $('btn-ping').addEventListener('click', async () => {
-    const btn = $('btn-ping');
+  if ($('btn-claims-audit')) {
+    $('btn-claims-audit').addEventListener('click', function () {
+      runAction('claims', $('btn-claims-audit'), {
+        text: $('claims-text').value || '',
+      });
+    });
+  }
+
+  $('btn-ping').addEventListener('click', async function () {
+    var btn = $('btn-ping');
     setBusy(btn, true);
     try {
-      const result = await postApi('/api/ping', {});
-      const role = currentRole();
-      showResult(role, result.body, !result.ok);
+      var result = await postApi('/api/ping', {});
+      showResult(currentRole(), result.body, !result.ok);
     } catch (e) {
       showResult(currentRole(), { ok: false, error: e.message || String(e) }, true);
     } finally {
@@ -189,13 +201,16 @@
 
   $('alias').addEventListener('change', saveAlias);
   $('alias').addEventListener('blur', saveAlias);
+  if ($('staff-pin')) {
+    $('staff-pin').addEventListener('change', savePin);
+    $('staff-pin').addEventListener('blur', savePin);
+  }
 
-  // Defaults
-  const iso = todayISO();
+  var iso = todayISO();
   $('today-date').value = iso;
   $('kitchen-date').value = iso;
-  ['result-today', 'result-kitchen', 'result-floor'].forEach((id) => {
-    const el = $(id);
+  ['result-today', 'result-kitchen', 'result-floor', 'result-claims'].forEach(function (id) {
+    var el = $(id);
     if (el) {
       el.textContent = '';
       el.classList.add('empty');
