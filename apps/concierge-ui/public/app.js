@@ -186,6 +186,119 @@
     });
   }
 
+
+  function pieWhy(r) {
+    if (!r) return '';
+    if (Array.isArray(r.why) && r.why.length) return r.why.join(' · ');
+    if (r.explanation) return typeof r.explanation === 'string' ? r.explanation : JSON.stringify(r.explanation);
+    return '';
+  }
+
+  function renderPieAssist(data) {
+    var badge = $('pie-decision');
+    var box = $('pie-recs');
+    if (!badge || !box) return;
+
+    if (!data || data.error === 'pie_unavailable') {
+      badge.hidden = false;
+      badge.className = 'pie-badge warn';
+      badge.textContent = 'PIE unavailable — Floor still works; start PIE runtime or check PIE_URL.';
+      box.hidden = false;
+      box.innerHTML = '<p class="pie-meta">' + (data && data.detail ? data.detail : 'pie_unavailable') + '</p>';
+      return;
+    }
+    if (data.error === 'pie_unauthorized') {
+      badge.hidden = false;
+      badge.className = 'pie-badge escalate';
+      badge.textContent = 'PIE unauthorized — set PIE_STAFF_PIN on concierge server to match PIE.';
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+
+    var action = data.action || data.decision || '';
+    var silence = !!data.silence;
+    badge.hidden = false;
+    if (action === 'escalate') {
+      badge.className = 'pie-badge escalate';
+      badge.textContent = 'ESCALATE / SILENCE — human support; do not run a protocol from this result.';
+    } else if (silence || action === 'silence') {
+      badge.className = 'pie-badge silence';
+      badge.textContent = 'SILENCE — prefer no protocol; coach manually if needed.';
+    } else {
+      badge.className = 'pie-badge ok';
+      badge.textContent = 'TOP-3' + (data.confidence != null ? ' · confidence ' + data.confidence : '');
+    }
+
+    var list = data.recommendations || [];
+    var html = '';
+    if (data.inferred_need) {
+      html += '<p class="pie-meta">inferred_need: ' + data.inferred_need + '</p>';
+    }
+    if (data.why_selected) {
+      var ws = Array.isArray(data.why_selected) ? data.why_selected.join(' · ') : data.why_selected;
+      html += '<p class="pie-meta">why_selected: ' + ws + '</p>';
+    }
+    if (!list.length) {
+      html += '<p class="pie-meta">No protocol recommendations.</p>';
+    } else {
+      list.slice(0, 3).forEach(function (r, i) {
+        var id = r.protocol_id || '';
+        var name = r.name || id;
+        var conf = r.confidence != null ? r.confidence : '—';
+        var why = pieWhy(r);
+        html += '<div class="pie-card">' +
+          '<div class="pie-card-top"><span class="pie-rank">#' + (i + 1) + '</span> ' +
+          '<strong>' + name + '</strong></div>' +
+          '<div class="pie-meta">' + id +
+          (r.score != null ? ' · score ' + r.score : '') +
+          ' · conf ' + conf +
+          (r.evidence_class ? ' · ' + r.evidence_class : '') +
+          '</div>' +
+          (why ? '<div class="pie-why">' + why + '</div>' : '') +
+          '<button type="button" class="btn pie-use" data-protocol-id="' + id + '">Use ID</button>' +
+          '</div>';
+      });
+    }
+    box.hidden = false;
+    box.innerHTML = html;
+    box.querySelectorAll('.pie-use').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-protocol-id') || '';
+        if ($('floor-protocol')) $('floor-protocol').value = id;
+      });
+    });
+  }
+
+  if ($('btn-pie-top3')) {
+    $('btn-pie-top3').addEventListener('click', async function () {
+      var btn = $('btn-pie-top3');
+      setBusy(btn, true);
+      try {
+        var client = ($('pie-client').value || '').trim() || getAlias();
+        var sleepRaw = ($('pie-sleep').value || '').trim();
+        var result = await postApi('/api/pie/recommend', {
+          client_id: client,
+          alias: getAlias(),
+          available_minutes: Number($('pie-minutes').value),
+          place_class: $('pie-place').value,
+          event_tag: $('pie-event').value,
+          stress: Number($('pie-stress').value),
+          energy: Number($('pie-energy').value),
+          sleep_h: sleepRaw === '' ? null : Number(sleepRaw),
+          prefers_breath: $('pie-breath').value,
+        });
+        renderPieAssist(result.body || { error: 'pie_unavailable' });
+        showResult('floor', result.body, result.body && result.body.error === 'pie_unavailable' ? true : !result.ok && !result.body);
+      } catch (e) {
+        renderPieAssist({ error: 'pie_unavailable', detail: e.message || String(e) });
+        showResult('floor', { ok: false, error: e.message || String(e) }, true);
+      } finally {
+        setBusy(btn, false);
+      }
+    });
+  }
+
   $('btn-ping').addEventListener('click', async function () {
     var btn = $('btn-ping');
     setBusy(btn, true);

@@ -34,6 +34,7 @@
       <section id="panel-today" class="panel" hidden>
         <h1>Today</h1>
         <p class="lede">Principal day brief and preference signals.</p>
+        <p class="hint">Need a protocol pick? Use <a href="#floor">Floor → Protocol assist (PIE)</a> for staff Top-3 (IDs only — no vault recipes).</p>
 
         <div class="grid">
           <div class="field">
@@ -174,8 +175,10 @@
               <option value="emotional_load_reset"></option>
               <option value="clarity_protocol"></option>
               <option value="stress_field_clearing"></option>
-              <option value="accelerator_travel"></option>
-              <option value="accelerator_high_stress"></option>
+              <option value="travel_reset"></option>
+              <option value="high_stress_interrupt"></option>
+              <option value="sleep_wind_down"></option>
+              <option value="pre_meeting"></option>
             </datalist>
           </div>
           <div class="field">
@@ -187,6 +190,85 @@
         <div class="actions">
           <button type="button" class="btn primary" id="btn-ros">Run-of-show</button>
         </div>
+
+        <hr class="rule" />
+
+        <h2>Protocol assist (PIE)</h2>
+        <p class="lede pie-lede">Staff Top-3 from Protocol Intelligence Engine. Concierge stays operator shell — IDs + why/confidence only, never vault recipes.</p>
+
+        <div class="grid three">
+          <div class="field">
+            <label for="pie-client">client_id / alias</label>
+            <input id="pie-client" type="text" autocomplete="off" placeholder="uses header Alias if blank" />
+          </div>
+          <div class="field">
+            <label for="pie-minutes">available_minutes</label>
+            <input id="pie-minutes" type="number" min="0" max="180" value="10" />
+          </div>
+          <div class="field">
+            <label for="pie-place">place_class</label>
+            <select id="pie-place">
+              <option value="office" selected>office</option>
+              <option value="desk">desk</option>
+              <option value="home">home</option>
+              <option value="hotel">hotel</option>
+              <option value="public">public</option>
+              <option value="airport">airport</option>
+              <option value="plane">plane</option>
+              <option value="bedroom">bedroom</option>
+              <option value="private">private</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="field">
+            <label for="pie-event">event_tag</label>
+            <select id="pie-event">
+              <option value="none">none</option>
+              <option value="investor_meeting" selected>investor_meeting</option>
+              <option value="pitch">pitch</option>
+              <option value="board_meeting">board_meeting</option>
+              <option value="meeting_streak">meeting_streak</option>
+              <option value="T_sleep">T_sleep</option>
+              <option value="pre_flight">pre_flight</option>
+              <option value="post_landing">post_landing</option>
+              <option value="midday_crash">midday_crash</option>
+              <option value="deep_work">deep_work</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="pie-stress">stress (1–5)</label>
+            <input id="pie-stress" type="number" min="1" max="5" value="3" />
+          </div>
+          <div class="field">
+            <label for="pie-energy">energy (1–5)</label>
+            <input id="pie-energy" type="number" min="1" max="5" value="3" />
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="field">
+            <label for="pie-sleep">sleep_h</label>
+            <input id="pie-sleep" type="number" min="0" max="24" step="0.5" value="6" />
+          </div>
+          <div class="field">
+            <label for="pie-breath">prefers_breath</label>
+            <select id="pie-breath">
+              <option value="neutral" selected>neutral</option>
+              <option value="yes">yes</option>
+              <option value="no">no</option>
+            </select>
+          </div>
+          <div class="field field-spacer"></div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-pie-top3">Get Top-3</button>
+        </div>
+
+        <div id="pie-decision" class="pie-badge" hidden></div>
+        <div id="pie-recs" class="pie-recs" hidden></div>
 
         <hr class="rule" />
 

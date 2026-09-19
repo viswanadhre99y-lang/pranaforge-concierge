@@ -330,3 +330,54 @@ select {
 }
 
 .linkish:hover { color: var(--accent); }
+
+/* PIE staff-assist (Floor) */
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: -1.25rem 0 1.75rem;
+  max-width: 32rem;
+}
+.hint a { color: var(--accent); text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
+
+.pie-lede { margin-bottom: 1.25rem; max-width: 36rem; }
+
+.pie-badge {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+}
+.pie-badge.ok { color: var(--ok); border-color: var(--ok); }
+.pie-badge.silence { color: var(--accent); border-color: var(--accent-dim); }
+.pie-badge.escalate { color: var(--danger); border-color: var(--danger); font-weight: 600; }
+.pie-badge.warn { color: var(--accent); border-color: var(--accent-dim); }
+
+.pie-recs { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.pie-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+}
+.pie-card-top { margin-bottom: 0.25rem; }
+.pie-rank { color: var(--faint); font-size: 0.7rem; letter-spacing: 0.08em; margin-right: 0.35rem; }
+.pie-meta { color: var(--muted); font-size: 0.75rem; margin: 0.15rem 0; }
+.pie-why { color: var(--text); font-size: 0.8rem; margin: 0.4rem 0 0.65rem; }
+.pie-use { margin-top: 0.25rem; font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+input[type="number"] {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  font: inherit;
+  width: 100%;
+  outline: none;
+}
+input[type="number"]:focus { border-color: var(--accent-dim); }

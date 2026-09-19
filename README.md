@@ -27,3 +27,11 @@ See `CHANGELOG.md` for Phase-1 gap-fill notes. **Set this GitHub repo to private
 
 - Alias-based, physician diet wins, no disease-cure language
 - Phase 1: private / invite-only — not a public D2C app
+
+## PIE staff-assist (optional)
+
+Floor can call Protocol Intelligence Engine for Top-3 protocol IDs (no vault recipes in this shell).
+
+- Env: `PIE_URL` (default `http://127.0.0.1:8790`), optional `PIE_STAFF_PIN`
+- Config: optional `pie_url` in `apps/concierge-ui/config.example.json`
+- See `apps/concierge-ui/README.md` for running both servers

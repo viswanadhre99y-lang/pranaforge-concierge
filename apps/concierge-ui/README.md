@@ -15,10 +15,39 @@ cp config.example.json config.json
 # export PF_KITCHEN_WEBHOOK_KEY=....
 # export PF_FLOOR_WEBHOOK_KEY=....
 # export PF_CLAIMS_WEBHOOK_KEY=....
+# PIE staff-assist (Floor Top-3):
+# export PIE_URL=http://127.0.0.1:8790   # default if unset
+# export PIE_STAFF_PIN=....              # must match PIE when PIE requires pin
 node server.js
 ```
 
 Open `http://localhost:8787/`
+
+### Run with PIE (staff-assist)
+
+In one terminal (PIE runtime):
+
+```bash
+cd /path/to/protocol-intelligence-engine/17_runtime
+npm install
+# optional: export PIE_STAFF_PIN=pie-dev-pin
+PORT=8790 node server.js
+```
+
+In another (Concierge):
+
+```bash
+cd apps/concierge-ui
+# export PIE_URL=http://127.0.0.1:8790
+# export PIE_STAFF_PIN=pie-dev-pin   # same as PIE if set
+node server.js
+```
+
+Floor → **Protocol assist (PIE)** → Get Top-3. If PIE is down, Floor returns `{ok:false,error:'pie_unavailable'}` and the rest of Floor still works. Concierge never embeds vault recipes — IDs + why/confidence only.
+
+```bash
+node scripts/test-pie-proxy.js
+```
 
 ## API
 
@@ -32,8 +61,11 @@ Open `http://localhost:8787/`
 | POST | `/api/floor` | Run-of-show / QA |
 | POST | `/api/claims` | Language audit |
 | POST | `/api/ping` | Today webhook ping |
+| POST | `/api/pie/recommend` | Proxy to PIE `/api/recommend` (staff-assist Top-3) |
 
 Webhook success responses are passed through to the UI (JSON or `{ text }`).
+
+Optional `pie_url` in `config.json` (or env `PIE_URL`). Env `PIE_STAFF_PIN` is forwarded as `X-PIE-Staff-Pin` — do not commit secrets.
 
 ## Rails
 
