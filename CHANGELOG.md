@@ -1,3 +1,11 @@
+## 2026-09-20 — Four Rooms Review→Approve→outbox
+
+- Fixture principal R (Travel, dislike cold smoothie, physician none)
+- Room 2 Situation panel; Room 3 Review OPTIONS/RECOMMEND/REFUSE/DRAFT + Approve
+- Room 4 Floor live checklist + guest logistics text; Kitchen Save → data/outbox/
+- Room 1 Library index from vault/catalog.json (+ optional research/world rails)
+- PIE fallback: Travel→TR-01; Smoke: scripts/test-four-rooms.js
+
 # Changelog
 
 ## 0.3.0 — PIE Floor staff-assist (2026-09-19)

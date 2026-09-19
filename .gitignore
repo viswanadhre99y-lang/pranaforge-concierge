@@ -9,5 +9,10 @@ apps/concierge-ui/logs/
 # Principal files (alias JSON — never commit UHNW data)
 apps/concierge-ui/data/principals/*.json
 !apps/concierge-ui/data/principals/.gitkeep
-apps/concierge-ui/config.json
-apps/concierge-ui/logs/
+!apps/concierge-ui/data/principals/r.json
+
+# Review + outbox artifacts (runtime); keep dirs
+apps/concierge-ui/data/reviews/*.json
+!apps/concierge-ui/data/reviews/.gitkeep
+apps/concierge-ui/data/outbox/*.md
+!apps/concierge-ui/data/outbox/.gitkeep

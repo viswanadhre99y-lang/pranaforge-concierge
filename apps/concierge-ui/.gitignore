@@ -6,3 +6,8 @@ node_modules/
 *.log
 data/principals/*.json
 !data/principals/.gitkeep
+!data/principals/r.json
+data/reviews/*.json
+!data/reviews/.gitkeep
+data/outbox/*.md
+!data/outbox/.gitkeep

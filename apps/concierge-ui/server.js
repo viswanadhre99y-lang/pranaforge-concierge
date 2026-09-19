@@ -9,13 +9,20 @@ const { URL } = require('url');
 const claimsGate = require('./lib/claimsGate');
 const principalStore = require('./lib/principalStore');
 const pieProxy = require('./lib/pieProxy');
+const libraryIndex = require('./lib/libraryIndex');
+const reviewEngine = require('./lib/reviewEngine');
+const delivery = require('./lib/delivery');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const CONFIG_PATH = path.join(ROOT, 'config.json');
 const OUTBOX_PATH = path.join(ROOT, 'logs', 'outbox.jsonl');
 const WEBHOOK_TIMEOUT_MS = 8000;
+
 const KNOWN_PROTOCOL_IDS = [
+  'DF-01', 'DF-02', 'EL-01', 'CL-01', 'SF-01',
+  'TR-01', 'TR-02', 'HS-01', 'SS-01', 'PM-01', 'BR-01',
+  // legacy snake_case kept for older Floor forms
   'daily_forge',
   'emotional_load_reset',
   'clarity_protocol',
@@ -74,6 +81,7 @@ function contentTypeFor(filePath) {
     '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon',
     '.png': 'image/png',
+    '.md': 'text/markdown; charset=utf-8',
   };
   return map[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
 }
@@ -162,7 +170,8 @@ function parseUpstream(text) {
 }
 
 function applyClaims(role, data) {
-  if (role !== 'kitchen' && role !== 'floor' && role !== 'claims') {
+  // Hard lock: claims regex on every outbound string (Today, Floor, Kitchen, WhatsApp stub)
+  if (role !== 'kitchen' && role !== 'floor' && role !== 'claims' && role !== 'today' && role !== 'review' && role !== 'guest') {
     return { data: data, claims: null };
   }
   const gated = claimsGate.gatePayload(data);
@@ -214,42 +223,29 @@ function localDietCard(body) {
   const alias = body.alias || 'principal';
   let p = {};
   try { p = principalStore.readPrincipal(alias); } catch (e) {}
-  const day = body.day_type || p.day_type_preference || 'Forge';
-  const physician = body.physician_constraints || p.physician_constraints || 'none on file';
+  const day = body.day_type || (p.state && p.state.day_type) || p.day_type_preference || 'Forge';
+  const physician = body.physician_constraints || (p.diet && p.diet.physician_constraints) || p.physician_constraints || 'none on file';
   const allergens = body.allergens || (Array.isArray(p.allergens) ? p.allergens.join(', ') : '') || 'none on file';
-  const pattern = body.pattern || p.diet_pattern || 'India-kitchen, protein-anchored';
-  const text = [
-    'DIET CARD - ' + alias + ' - ' + (body.date || new Date().toISOString().slice(0, 10)),
-    'Day type: ' + day,
-    'Physician constraints (win): ' + physician,
-    'Allergens: ' + allergens,
-    'Pattern: ' + pattern,
-    '',
-    'Chef cues (local fallback - wire Kitchen webhook for full card):',
-    '- Protein-anchored first meal; plants visible; warm spices default',
-    '- Soft / familiar plate if Travel or Stress day',
-    '- Felt-energy language only; no medical claims',
-    '- Physician/RD plan overrides every template',
-  ].join('\n');
-  return { ok: true, source: 'local_fallback', alias: alias, day_type: day, text: text, card: text };
+  const pattern = body.pattern || p.diet_pattern || (p.diet && p.diet.pattern) || 'India-kitchen, protein-anchored';
+  const md = reviewEngine.buildKitchenCardMarkdown(
+    Object.assign({}, p, {
+      physician_constraints: physician,
+      diet_pattern: pattern,
+      allergens: typeof allergens === 'string' ? allergens.split(',').map((s) => s.trim()).filter(Boolean) : p.allergens,
+    }),
+    day,
+    body.date || new Date().toISOString().slice(0, 10),
+    body.protocol_id || ''
+  );
+  return { ok: true, source: 'local_fallback', alias: alias, day_type: day, text: md, card: md };
 }
 
 function localRunOfShow(body) {
   const alias = body.alias || 'principal';
-  const protocol = body.protocol_id || 'daily_forge';
-  const text = [
-    'RUN OF SHOW - ' + alias,
-    'protocol_id: ' + protocol,
-    'session_id: ' + (body.session_id || '-'),
-    '',
-    'Minute marks (shell only - fill from Protocols library):',
-    '0:00  Arrive / settle',
-    '0:02  Main block (FILL - founder IP)',
-    '...  Do not invent asana or pranic steps here',
-    'End   Close + scores (energy / sleep_rest / clarity)',
-    '',
-    'Consent: confirm readiness; lifestyle recovery only; not medical care.',
-  ].join('\n');
+  const protocol = body.protocol_id || 'DF-01';
+  const catalog = libraryIndex.loadVaultCatalog();
+  const hit = catalog.vault.find((v) => v.id === protocol) || { id: protocol, label: protocol };
+  const text = reviewEngine.buildFloorLiveSheet(alias, hit, body.session_time || 'TBD');
   return {
     ok: true,
     source: 'local_fallback',
@@ -257,6 +253,7 @@ function localRunOfShow(body) {
     protocol_id: protocol,
     known_protocol_ids: KNOWN_PROTOCOL_IDS,
     text: text,
+    guest_text: reviewEngine.guestTextOnly(body.session_time || 'TBD'),
   };
 }
 
@@ -279,7 +276,9 @@ async function handleToday(req, res, config) {
       if (proxied.mode === 'webhook') {
         return sendJson(res, 200, Object.assign({ ok: true }, expandData(proxied.data), { claims: proxied.claims }));
       }
-      return sendJson(res, 200, principalStore.buildTodayBrief(alias, body.date, body.tz));
+      const brief = principalStore.buildTodayBrief(alias, body.date, body.tz);
+      const gated = applyClaims('today', brief);
+      return sendJson(res, 200, Object.assign({}, gated.data, { claims: gated.claims }));
     }
     if (action === 'log_score') {
       const updated = principalStore.logScore(alias, {
@@ -307,6 +306,28 @@ async function handleToday(req, res, config) {
         webhook: proxied.mode === 'webhook' ? proxied.data : null,
       });
     }
+    if (action === 'patch_situation') {
+      const patch = {
+        day_type_preference: body.day_type,
+        travel_72h: body.travel_72h,
+        minutes_available: body.minutes_available,
+        privacy_closed_room: body.privacy_closed_room,
+      };
+      if (body.dislikes_hard != null) patch.dislikes_hard = body.dislikes_hard;
+      if (body.likes != null) patch.likes = body.likes;
+      const updated = principalStore.patchPrincipal(alias, patch, {
+        allow_physician_overwrite: !!body.allow_physician_overwrite,
+      });
+      const brief = principalStore.buildTodayBrief(alias, body.date, body.tz);
+      const gated = applyClaims('today', brief);
+      return sendJson(res, 200, {
+        ok: true,
+        source: 'local_principal_file',
+        principal: updated,
+        brief: gated.data,
+        claims: gated.claims,
+      });
+    }
     return sendJson(res, 400, { ok: false, error: 'Unknown today action: ' + action });
   } catch (e) {
     return sendJson(res, 400, { ok: false, error: e.message || String(e) });
@@ -318,6 +339,22 @@ async function handleKitchen(req, res, config) {
   let body;
   try { body = await readBody(req); }
   catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+
+  if (body.action === 'save_outbox') {
+    try {
+      const alias = body.alias || 'principal';
+      let md = body.markdown || body.card || body.text;
+      if (!md) {
+        const card = localDietCard(body);
+        md = card.text;
+      }
+      const saved = delivery.saveKitchenCard(alias, md, body.date);
+      return sendJson(res, 200, saved);
+    } catch (e) {
+      return sendJson(res, 400, { ok: false, error: e.message || String(e) });
+    }
+  }
+
   const proxied = await proxyRole('kitchen', body, config);
   if (proxied.mode === 'webhook') {
     return sendJson(res, 200, Object.assign({ ok: true }, expandData(proxied.data), { claims: proxied.claims }));
@@ -331,6 +368,16 @@ async function handleFloor(req, res, config) {
   let body;
   try { body = await readBody(req); }
   catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+
+  if (body.action === 'guest_text') {
+    try {
+      const gt = delivery.buildGuestText(body.session_time || 'TBD');
+      return sendJson(res, 200, gt);
+    } catch (e) {
+      return sendJson(res, 400, { ok: false, error: e.message || String(e) });
+    }
+  }
+
   if (body.action === 'log_qa') {
     const proxied = await proxyRole('floor', body, config);
     return sendJson(res, 200, {
@@ -380,7 +427,8 @@ async function handleClaims(req, res, config) {
 
 async function handlePrincipal(req, res, pathname) {
   if (!requireStaff(req, res)) return;
-  const alias = pathname.split('/').filter(Boolean)[2];
+  const parts = pathname.split('/').filter(Boolean);
+  const alias = parts[2];
   if (!alias) return sendJson(res, 400, { ok: false, error: 'alias required' });
   try {
     if (req.method === 'GET') {
@@ -389,6 +437,13 @@ async function handlePrincipal(req, res, pathname) {
     if (req.method === 'PUT') {
       const body = await readBody(req);
       return sendJson(res, 200, { ok: true, principal: principalStore.writePrincipal(alias, body) });
+    }
+    if (req.method === 'PATCH') {
+      const body = await readBody(req);
+      const updated = principalStore.patchPrincipal(alias, body, {
+        allow_physician_overwrite: !!body.allow_physician_overwrite,
+      });
+      return sendJson(res, 200, { ok: true, principal: updated });
     }
     return sendJson(res, 405, { ok: false, error: 'Method not allowed' });
   } catch (e) {
@@ -406,6 +461,7 @@ async function handlePing(req, res, config) {
       message: 'Server up. Today webhook not configured - local Principal File still works.',
       auth_required: staffPinRequired(),
       known_protocol_ids: KNOWN_PROTOCOL_IDS,
+      four_rooms: true,
     });
   }
   try {
@@ -421,15 +477,90 @@ async function handlePing(req, res, config) {
   }
 }
 
-
 async function handlePieRecommend(req, res, config) {
   if (!requireStaff(req, res)) return;
   let body;
   try { body = await readBody(req); }
   catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
   const result = await pieProxy.proxyRecommend(body, config);
-  // Always 200 for assist miss (pie_unavailable / unauthorized) so Floor never crashes
   return sendJson(res, 200, result);
+}
+
+async function handleLibrary(req, res) {
+  if (!requireStaff(req, res)) return;
+  return sendJson(res, 200, libraryIndex.buildLibraryIndex());
+}
+
+async function handleReview(req, res, config) {
+  if (!requireStaff(req, res)) return;
+  let body;
+  try { body = await readBody(req); }
+  catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+  const action = body.action || 'options';
+  const alias = body.alias || 'r';
+  try {
+    if (action === 'options') {
+      const opts = await reviewEngine.buildOptions(alias, config, {
+        day_type: body.day_type,
+        travel_72h: body.travel_72h,
+        minutes_available: body.minutes_available,
+      });
+      const draft = reviewEngine.buildDraft(
+        alias,
+        (opts.recommend && opts.recommend.id) || 'DF-01',
+        false,
+        body.session_time || 'TBD'
+      );
+      return sendJson(res, 200, Object.assign({}, opts, {
+        draft: draft,
+        refuse: opts.refuse,
+      }));
+    }
+    if (action === 'draft') {
+      const recommendId = body.recommend_id || body.recommend || 'DF-01';
+      const draft = reviewEngine.buildDraft(
+        alias,
+        recommendId,
+        !!body.include_rail,
+        body.session_time || 'TBD'
+      );
+      return sendJson(res, 200, { ok: true, draft: draft });
+    }
+    if (action === 'approve') {
+      const result = reviewEngine.approveReview(alias, {
+        recommend_id: body.recommend_id || body.recommend,
+        options: body.options,
+        edits: body.edits,
+        include_rail: !!body.include_rail,
+        refuse: body.refuse,
+        why: body.why,
+        approver: body.approver || 'founder',
+        session_time: body.session_time || 'TBD',
+      });
+      // Also write kitchen card to outbox on Approve (Room 4 contract)
+      const saved = delivery.saveKitchenCard(
+        alias,
+        result.draft.kitchen_card_md,
+        result.draft.date
+      );
+      const floor = delivery.floorFromApproval(result.draft);
+      return sendJson(res, 200, {
+        ok: true,
+        review_path: result.review_path,
+        record: result.record,
+        floor: floor,
+        outbox: saved,
+        guest_text: result.draft.guest_text,
+      });
+    }
+    if (action === 'silence') {
+      const result = reviewEngine.silenceReview(alias, body);
+      return sendJson(res, 200, result);
+    }
+    return sendJson(res, 400, { ok: false, error: 'Unknown review action: ' + action });
+  } catch (e) {
+    return sendJson(res, 400, { ok: false, error: e.message || String(e) });
+  }
 }
 
 function createServer(config) {
@@ -442,7 +573,7 @@ function createServer(config) {
     if (req.method === 'OPTIONS') {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, PUT, PATCH, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, X-PF-Staff-Pin',
       });
       return res.end();
@@ -450,7 +581,7 @@ function createServer(config) {
 
     try {
       if (req.method === 'GET' && pathname === '/health') {
-        return sendJson(res, 200, { ok: true, auth_required: staffPinRequired() });
+        return sendJson(res, 200, { ok: true, auth_required: staffPinRequired(), four_rooms: true });
       }
       if (req.method === 'GET' && pathname === '/api/meta') {
         return sendJson(res, 200, {
@@ -459,7 +590,11 @@ function createServer(config) {
           known_protocol_ids: KNOWN_PROTOCOL_IDS,
           pie_url: pieProxy.resolvePieBaseUrl(config),
           pie_assist: true,
+          four_rooms: true,
         });
+      }
+      if (req.method === 'GET' && pathname === '/api/library') {
+        return await handleLibrary(req, res);
       }
       if (pathname.indexOf('/api/principal') === 0) {
         return await handlePrincipal(req, res, pathname);
@@ -468,6 +603,7 @@ function createServer(config) {
       if (req.method === 'POST' && pathname === '/api/kitchen') return await handleKitchen(req, res, config);
       if (req.method === 'POST' && pathname === '/api/floor') return await handleFloor(req, res, config);
       if (req.method === 'POST' && pathname === '/api/claims') return await handleClaims(req, res, config);
+      if (req.method === 'POST' && pathname === '/api/review') return await handleReview(req, res, config);
       if (req.method === 'POST' && pathname === '/api/pie/recommend') return await handlePieRecommend(req, res, config);
       if (req.method === 'POST' && pathname === '/api/ping') return await handlePing(req, res, config);
       if (req.method === 'GET') return serveStatic(req, res, pathname);
@@ -491,6 +627,7 @@ function main() {
   createServer(config).listen(port, '0.0.0.0', function () {
     console.log('PranaForge Concierge listening on 0.0.0.0:' + port);
     console.log('Staff PIN ' + (staffPinRequired() ? 'REQUIRED' : 'not set (dev open)'));
+    console.log('Four Rooms: Library | Situation | Review | Delivery');
   });
 }
 

@@ -1,6 +1,6 @@
 # PranaForge Concierge UI
 
-Private staff console: **Today | Kitchen | Floor | Claims**.
+Private staff console: **Library | Situation | Review | Floor | Kitchen | Claims** (Four Rooms).
 
 Bots (webhooks) are optional brains. Local **Principal File** works without webhooks.
 
@@ -22,6 +22,22 @@ node server.js
 ```
 
 Open `http://localhost:8787/`
+
+## Four Rooms (fixture R)
+
+1. Open `http://localhost:8787/#today` with alias `r`
+2. Situation shows Travel + travel_72h + physician lock
+3. **Review** → Load OPTIONS → expect TR-01 → Approve
+4. Floor live sheet + Kitchen outbox at `data/outbox/r-{date}.md`
+5. Guest text = logistics only (no step-list)
+
+```bash
+node scripts/test-four-rooms.js
+```
+
+API additions: `GET /api/library`, `POST /api/review` (options|draft|approve|silence),
+`PATCH /api/principal/:alias`, kitchen `save_outbox`, floor `guest_text`.
+
 
 ### Run with PIE (staff-assist)
 

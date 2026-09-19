@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "note": "Labels + duration + when/not only. No asana/pranic recipe text. FILL = founder tape required.",
+  "protocols": [
+    {
+      "id": "DF-01",
+      "label": "Daily Forge",
+      "duration_min": [15, 25],
+      "product_role": "vault",
+      "when": "Weekday baseline energy maintenance",
+      "not": "Do not invent asana or pranic steps until founder FILL",
+      "fill_status": "empty"
+    },
+    {
+      "id": "DF-02",
+      "label": "Daily Forge short",
+      "duration_min": [8, 12],
+      "product_role": "vault",
+      "when": "Short window; same intent as DF-01",
+      "not": "Not a substitute for physician care",
+      "fill_status": "empty"
+    },
+    {
+      "id": "EL-01",
+      "label": "Emotional Load Reset",
+      "duration_min": [12, 20],
+      "product_role": "vault",
+      "when": "High emotional load day; staff live delivery",
+      "not": "Never label as psychotherapy on the floor",
+      "fill_status": "empty"
+    },
+    {
+      "id": "CL-01",
+      "label": "Clarity Protocol",
+      "duration_min": [10, 18],
+      "product_role": "vault",
+      "when": "Decision fog; pre-deep-work",
+      "not": "Not a clinical cognitive assessment",
+      "fill_status": "empty"
+    },
+    {
+      "id": "SF-01",
+      "label": "Stress-Field Clearing",
+      "duration_min": [10, 18],
+      "product_role": "vault",
+      "when": "Ambient stress saturation",
+      "not": "Not a trauma protocol",
+      "fill_status": "empty"
+    },
+    {
+      "id": "TR-01",
+      "label": "Travel arrival settle",
+      "duration_min": [5, 12],
+      "product_role": "vault",
+      "when": "Arrival / travel_72h window",
+      "not": "Not a jet-lag cure claim",
+      "fill_status": "empty"
+    },
+    {
+      "id": "TR-02",
+      "label": "Jet-lag next morning",
+      "duration_min": [8, 15],
+      "product_role": "vault",
+      "when": "Morning after long-haul",
+      "not": "Not a medical sleep prescription",
+      "fill_status": "empty"
+    },
+    {
+      "id": "HS-01",
+      "label": "High-stress interrupt",
+      "duration_min": [3, 8],
+      "product_role": "vault",
+      "when": "Acute stress spike; short interrupt",
+      "not": "Not crisis intervention; escalate if crisis_flag",
+      "fill_status": "empty"
+    },
+    {
+      "id": "SS-01",
+      "label": "Sleep-settle / wind-down",
+      "duration_min": [10, 20],
+      "product_role": "vault",
+      "when": "Evening wind-down; felt restorativeness",
+      "not": "CBT-I sleep restriction = clinician only; never auto-assign",
+      "fill_status": "empty"
+    },
+    {
+      "id": "PM-01",
+      "label": "Pre-meeting",
+      "duration_min": [5, 10],
+      "product_role": "vault",
+      "when": "Peak / meeting readiness",
+      "not": "Not performance-enhancing drug language",
+      "fill_status": "empty"
+    },
+    {
+      "id": "BR-01",
+      "label": "Body-ready",
+      "duration_min": [8, 15],
+      "product_role": "vault",
+      "when": "Physical readiness before demand",
+      "not": "Not physiotherapy or rehab",
+      "fill_status": "empty"
+    }
+  ],
+  "public_rails_optional": [
+    {
+      "id": "rail-cyclic-sigh",
+      "label": "Cyclic sigh (public rail)",
+      "duration_min": [1, 5],
+      "product_role": "public_rail",
+      "when": "Optional wrap only if reviewer ticks include rail",
+      "not": "Never replaces vault in a paid hour"
+    },
+    {
+      "id": "rail-liu-zi-jue",
+      "label": "Liu Zi Jue (world practice rail)",
+      "duration_min": [5, 12],
+      "product_role": "public_rail",
+      "when": "Optional public rail; off unless reviewer ticks include rail",
+      "not": "Not the paid session; knowledge rail only"
+    }
+  ]
+}
